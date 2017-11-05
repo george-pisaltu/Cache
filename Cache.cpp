@@ -7,7 +7,7 @@
 
 using namespace std;
 
-int hash(int key, char lvl) // functie de hash, lvl determina nivelul {L1,L2}
+int hash(int key, char lvl) // Hash function, lvl determines the level {L1,L2}
 {
     int nr[31] = { 0 }, nou = 0, den = 1, limit;
     int i, aux, max = 0;
@@ -29,7 +29,7 @@ int hash(int key, char lvl) // functie de hash, lvl determina nivelul {L1,L2}
     return nou;
 }
 
-template <typename Tkey, typename Tvalue> // structura pentru way
+template <typename Tkey, typename Tvalue> // way structure
 struct way {
 public:
     Tkey key;
@@ -37,14 +37,14 @@ public:
     bool dirty;
 };
 
-template <typename Tkey, typename Tvalue> // structura pentru set
+template <typename Tkey, typename Tvalue> // Set is a 2-way structure
 struct set {
 public:
     struct way<Tkey, Tvalue> way[2];
     int old;
 };
 
-template <typename Tkey, typename Tvalue>
+template <typename Tkey, typename Tvalue> // My own hashtable
 class Hashtable {
 private:
     struct set<Tkey, Tvalue>* h;
@@ -74,12 +74,12 @@ public:
         delete[] h;
     }
 
-    int getold(Tkey key) // returneaza nr way-ului mai vechi
+    int getold(Tkey key) // Returns older way
     {
         return h[hash(key, lvl)].old;
     }
 
-    void put(Tkey key, Tvalue value, int way) // adauga la o anumita locatie in hashtable
+    void put(Tkey key, Tvalue value, int way) // Adds key to hashtable
     {
         if (h[hash(key, lvl)].way[0].key == key) {
             h[hash(key, lvl)].way[0].value = value;
@@ -106,7 +106,7 @@ public:
         }
     }
 
-    Tvalue get(Tkey key) // returneaza valoarea corespunzatoare cheii key
+    Tvalue get(Tkey key) // Returns the value in hashtable of key
     {
         if (h[hash(key, lvl)].way[0].key == key) {
             return h[hash(key, lvl)].way[0].value;
@@ -117,7 +117,7 @@ public:
         else
             return 0;
     }
-    bool has_key(Tkey key) // returneaza true daca exista cheia in hashtable
+    bool has_key(Tkey key) // Returns true if key exists in hashtable
     {
         if (h[hash(key, lvl)].way[0].key == key || h[hash(key, lvl)].way[1].key == key)
             return true;
@@ -125,11 +125,11 @@ public:
             return false;
     }
 
-    void print() // printeaza cache-ul in fisier
+    void print() // Prints the cache in file cache.out
     {
         int i;
         ofstream cache;
-        cache.open("cache.out", ios::app); // se deschide cache.out in modul append
+        cache.open("cache.out", ios::app);
         for (i = 0; i < SETMAX; i++) {
             if (h[i].way[0].value != 0) {
                 cache << i << " 0 " << h[i].way[0].key << " " << h[i].way[0].value;
@@ -149,7 +149,7 @@ public:
         cache.close();
     }
 
-    void setdirty(Tkey key) // activeaza dirty bitul
+    void setdirty(Tkey key) // Activates the dirty bit
     {
         if (h[hash(key, lvl)].way[0].key == key) {
             h[hash(key, lvl)].way[0].dirty = true;
@@ -159,7 +159,7 @@ public:
         }
     }
 
-    void setclean(Tkey key) // sterge dirty bitul
+    void setclean(Tkey key) // Disables the dirty bit
     {
         if (h[hash(key, lvl)].way[0].key == key) {
             h[hash(key, lvl)].way[0].dirty = false;
@@ -169,7 +169,7 @@ public:
         }
     }
 
-    bool getdirty(Tkey key) // returneaza dirty bitul
+    bool getdirty(Tkey key) // Returns the dirty bit
     {
         if (h[hash(key, lvl)].way[0].key == key) {
             return h[hash(key, lvl)].way[0].dirty;
@@ -180,7 +180,7 @@ public:
         return false;
     }
 
-    int getlvl() //returneaza nivelul cache-ului
+    int getlvl() // Returns the level of the cache
     {
         return lvl;
     }
@@ -188,31 +188,31 @@ public:
 
 int main()
 {
-    class Hashtable<int, int> l11(2048, 1), l12(2048, 1), l2(8192, 2); // cele 3 cache-uri simulate
-    ofstream ramout, aux; // fisierele necesare
+    class Hashtable<int, int> l11(2048, 1), l12(2048, 1), l2(8192, 2); // 3 caches simulated, 2 level-1's and one level-2
+    ofstream ramout, aux;
     ifstream ramin, op;
     int i, j, addr, newdata, aram[100001], vram[100001], coren, rammax;
     char operation;
     ramout.open("ram.out");
     ramin.open("ram.in");
     op.open("operations.in");
-    aux.open("cache.out"); // se goleste fisierul cache.out inainte de utilizare
+    aux.open("cache.out"); // Empty the cache output before utilisation
     aux.close();
     i = 0;
     while (true) {
-        ramin >> aram[i] >> vram[i]; // se citeste memoria ram
+        ramin >> aram[i] >> vram[i]; // Reading the RAM memory
         i++;
         if (ramin.eof())
             break;
     }
     rammax = i;
     while (true) {
-        op >> coren >> operation >> addr; // se salveaza in coren nr nucleului
-        if (operation == 'w') // in operation se salveaza tipul operatiei
-            op >> newdata; // in addr se salveaza adresa la care se face operatia
-        if (operation == 'r') // daca operatia e w se salveaza in newdata datele noi
+        op >> coren >> operation >> addr; // coren keeps the number of the core
+        if (operation == 'w') // type of operation
+            op >> newdata; // address of the operation
+        if (operation == 'r')
         {
-            if (coren == 0) // pentru ambele nuclee
+            if (coren == 0)
             {
                 if (l11.getdirty(addr) == true || l11.get(addr) == 0) {
                     if (l2.get(addr) != 0) {
@@ -249,7 +249,7 @@ int main()
             }
         }
         else {
-            if (coren == 0) // pentru ambele nuclee
+            if (coren == 0)
             {
                 if (l11.get(addr) != 0 && l11.getdirty(addr) == false) {
                     l11.put(addr, newdata, l11.getold(addr));
@@ -295,13 +295,13 @@ int main()
                 }
             }
         }
-        if (op.eof()) // daca se termina operatiile se iese din while
+        if (op.eof())
             break;
     }
     i = 0;
     for (i = 0; i < rammax - 1; i++) {
 
-        ramout << setw(10) << setfill('0') << aram[i]; // se scrie in ram cu zerouri in fata
+        ramout << setw(10) << setfill('0') << aram[i]; // Write-back in RAM
         ramout << " ";
         ramout << setw(10) << setfill('0') << vram[i];
         ramout << endl;
